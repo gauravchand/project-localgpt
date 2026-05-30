@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         let assistantMessage = '';
+        let isClosed = false;
         
         try {
           const abortController = new AbortController();
@@ -40,34 +41,45 @@ export async function POST(request: NextRequest) {
           // Handle client disconnect
           request.signal.addEventListener('abort', () => {
             abortController.abort();
-            controller.close();
+            if (!isClosed) {
+              isClosed = true;
+              controller.close();
+            }
           });
 
           for await (const chunk of llmClient.generateStream(
             conversationHistory,
             abortController.signal
           )) {
-            if (chunk.done) {
+            if (chunk.done || isClosed) {
               // Save the complete assistant message
               if (assistantMessage.trim()) {
                 db.addMessage(sessionId, 'assistant', assistantMessage);
               }
-              controller.close();
+              if (!isClosed) {
+                isClosed = true;
+                controller.close();
+              }
               break;
             }
 
             assistantMessage += chunk.content;
             
             // Send chunk to client
-            const data = JSON.stringify({
-              content: chunk.content,
-              done: false,
-            });
-            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            if (!isClosed && chunk.content) {
+              const data = JSON.stringify({
+                content: chunk.content,
+                done: false,
+              });
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            }
           }
         } catch (error) {
           console.error('Error in chat stream:', error);
-          controller.error(error);
+          if (!isClosed) {
+            isClosed = true;
+            controller.error(error);
+          }
         }
       },
     });

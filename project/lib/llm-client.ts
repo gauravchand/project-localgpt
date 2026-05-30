@@ -8,7 +8,7 @@ export class OllamaClient {
   private baseUrl: string;
   private model: string;
 
-  constructor(baseUrl: string = 'http://localhost:11434', model: string = 'gemma3:1b') {
+  constructor(baseUrl: string = 'http://localhost:11434', model: string = 'mistral:7b-instruct-q4_0') {
     this.baseUrl = baseUrl;
     this.model = model;
   }
@@ -68,7 +68,12 @@ export class OllamaClient {
                   done: data.done || false,
                 };
               }
+              // Always yield if done, even if no content
               if (data.done) {
+                yield {
+                  content: '',
+                  done: true,
+                };
                 return;
               }
             } catch (error) {
