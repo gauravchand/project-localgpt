@@ -2,6 +2,8 @@
 
 A modern, full-featured chat application that integrates with Ollama and the Gemma 1B model for local AI conversations.
 
+**_NOTE: I've made use of a different model (mistral:7b-instruct-q4_0) due to facing errors in gemma:1b model. I found mistral more compatible with my specs: 8gb ram and rtx 3050H. So, make choice only after trying it yourself. That's the point of experimenting anyway :)_**
+
 ## Features
 
 - **Real-time Streaming**: Live streaming responses from the LLM
