@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Message } from '@/lib/database';
 
 export interface ChatMessage extends Omit<Message, 'session_id'> {
@@ -12,6 +12,11 @@ export function useChat(sessionId: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Clear messages when session changes
+  useEffect(() => {
+    setMessages([]);
+  }, [sessionId]);
 
   const loadMessages = useCallback(async (sessionId: string) => {
     try {

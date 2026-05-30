@@ -1,5 +1,5 @@
-// Using localStorage for persistence with fallback to in-memory
-// In production, replace this with PostgreSQL or better-sqlite3
+import fs from 'fs';
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ChatSession {
@@ -17,46 +17,46 @@ export interface Message {
   created_at: string;
 }
 
-// Simple database with localStorage persistence
-interface InMemoryDB {
+interface ServerDB {
   sessions: ChatSession[];
   messages: Message[];
 }
 
-class DatabaseManager {
-  private db: InMemoryDB;
-  private storageKey = 'localgpt_db';
-  private isDomAvailable = typeof window !== 'undefined';
+class ServerDatabaseManager {
+  private dbPath: string;
+  private db: ServerDB;
 
   constructor() {
-    this.db = {
-      sessions: [],
-      messages: []
-    };
-    this.loadFromStorage();
+    this.dbPath = path.join(process.cwd(), '.data', 'database.json');
+    this.db = { sessions: [], messages: [] };
+    this.loadFromFile();
   }
 
-  private loadFromStorage(): void {
-    if (!this.isDomAvailable) return;
-    
-    try {
-      const stored = localStorage.getItem(this.storageKey);
-      if (stored) {
-        this.db = JSON.parse(stored);
-        return;
-      }
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
+  private ensureDir(): void {
+    const dir = path.dirname(this.dbPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
   }
 
-  private saveToStorage(): void {
-    if (!this.isDomAvailable) return;
-    
+  private loadFromFile(): void {
     try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.db));
+      this.ensureDir();
+      if (fs.existsSync(this.dbPath)) {
+        const data = fs.readFileSync(this.dbPath, 'utf-8');
+        this.db = JSON.parse(data);
+      }
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
+      console.error('Error loading database from file:', error);
+    }
+  }
+
+  private saveToFile(): void {
+    try {
+      this.ensureDir();
+      fs.writeFileSync(this.dbPath, JSON.stringify(this.db, null, 2));
+    } catch (error) {
+      console.error('Error saving database to file:', error);
     }
   }
 
@@ -69,7 +69,7 @@ class DatabaseManager {
     };
     
     this.db.sessions.push(session);
-    this.saveToStorage();
+    this.saveToFile();
     return session;
   }
 
@@ -88,14 +88,14 @@ class DatabaseManager {
     if (session) {
       session.title = title;
       session.updated_at = new Date().toISOString();
-      this.saveToStorage();
+      this.saveToFile();
     }
   }
 
   deleteSession(id: string): void {
     this.db.sessions = this.db.sessions.filter(session => session.id !== id);
     this.db.messages = this.db.messages.filter(message => message.session_id !== id);
-    this.saveToStorage();
+    this.saveToFile();
   }
 
   addMessage(sessionId: string, role: 'user' | 'assistant', content: string): Message {
@@ -115,7 +115,7 @@ class DatabaseManager {
       session.updated_at = new Date().toISOString();
     }
     
-    this.saveToStorage();
+    this.saveToFile();
     return message;
   }
 
@@ -127,11 +127,11 @@ class DatabaseManager {
 }
 
 // Singleton instance
-let dbInstance: DatabaseManager | null = null;
+let dbInstance: ServerDatabaseManager | null = null;
 
-export function getDatabase(): DatabaseManager {
+export function getServerDatabase(): ServerDatabaseManager {
   if (!dbInstance) {
-    dbInstance = new DatabaseManager();
+    dbInstance = new ServerDatabaseManager();
   }
   return dbInstance;
 }

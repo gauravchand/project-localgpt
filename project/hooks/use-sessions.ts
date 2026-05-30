@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ChatSession } from '@/lib/database';
 
 export function useSessions() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
 
   const loadSessions = useCallback(async () => {
     try {
@@ -92,6 +93,8 @@ export function useSessions() {
   }, []);
 
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
     loadSessions();
   }, [loadSessions]);
 

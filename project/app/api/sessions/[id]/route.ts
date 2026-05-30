@@ -1,14 +1,14 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/database';
+import { getServerDatabase } from '@/lib/server-database';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const db = getDatabase();
+    const db = getServerDatabase();
     const session = db.getSession(params.id);
     
     if (!session) {
@@ -38,7 +38,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const db = getDatabase();
+    const db = getServerDatabase();
     db.deleteSession(params.id);
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -56,7 +56,7 @@ export async function PATCH(
 ) {
   try {
     const { title } = await request.json();
-    const db = getDatabase();
+    const db = getServerDatabase();
     db.updateSessionTitle(params.id, title);
     return NextResponse.json({ success: true });
   } catch (error) {

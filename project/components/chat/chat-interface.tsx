@@ -16,9 +16,11 @@ export function ChatInterface() {
   const [latestUserMessage, setLatestUserMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isInitialized = useRef(false);
+  const isInitializingRef = useRef(false);
   
   const {
     sessions,
+    isLoading: sessionsLoading,
     createSession,
     deleteSession,
     updateSessionTitle,
@@ -44,27 +46,24 @@ export function ChatInterface() {
     }
   }, [currentSessionId, loadMessages]);
 
+  // Initialize chat after sessions have loaded
   useEffect(() => {
-    const initializeChat = async () => {
-      // Check if already initialized
-      if (isInitialized.current) return;
-      
-      if (sessions.length === 0) {
-        const newSession = await createSession();
+    if (isInitialized.current || sessionsLoading || isInitializingRef.current) return;
+    
+    isInitializingRef.current = true;
+    
+    if (sessions.length === 0) {
+      createSession().then(newSession => {
         if (newSession) {
           setCurrentSessionId(newSession.id);
         }
-      } else {
-        setCurrentSessionId(sessions[0].id);
-      }
-      
+        isInitialized.current = true;
+      });
+    } else {
+      setCurrentSessionId(sessions[0].id);
       isInitialized.current = true;
-    };
-
-    if (!currentSessionId) {
-      initializeChat();
     }
-  }, []);
+  }, [sessionsLoading]);
 
   const handleNewChat = async () => {
     const newSession = await createSession();

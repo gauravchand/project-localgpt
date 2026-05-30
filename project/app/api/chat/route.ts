@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/database';
+import { getServerDatabase } from '@/lib/server-database';
 import { getLLMClient } from '@/lib/llm-client';
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = getDatabase();
+    const db = getServerDatabase();
     const llmClient = getLLMClient();
 
     // Save user message

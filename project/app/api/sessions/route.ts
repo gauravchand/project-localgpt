@@ -1,11 +1,11 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/database';
+import { getServerDatabase } from '@/lib/server-database';
 
 export async function GET() {
   try {
-    const db = getDatabase();
+    const db = getServerDatabase();
     const sessions = db.getSessions();
     return NextResponse.json(sessions);
   } catch (error) {
@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { title } = await request.json();
-    const db = getDatabase();
+    const db = getServerDatabase();
     const session = db.createSession(title);
     return NextResponse.json(session);
   } catch (error) {
