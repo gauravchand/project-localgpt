@@ -2,8 +2,19 @@
 
 A modern, full-featured chat application that integrates with Ollama and the Gemma 1B model for local AI conversations.
 
+last updated 30th May
+
 **_NOTE: I've made use of a different model (mistral:7b-instruct-q4_0) due to facing errors in gemma:1b model. I found mistral more compatible with my specs: 8gb ram and rtx 3050H. So, make choice only after trying it yourself. That's the point of experimenting anyway :)_**
 
+**Note2- Fixed some issues:**
+
+_1. Fixed the two new chat appearing bug (due to bugs, two new chats appeared at the app boot up)._
+
+_2. Fixed the context error (when trying to switch between chats, neither the previous nor the newer chat were accessible)._
+
+_3. Fixed the storage bug (context: after clicking new chat, the old chat's content disappeared and wouldn't be accessed)._
+
+# The current version gives output in decent speed (as the difficulty of the question increases, the time taken to be answered increases too).
 ## Features
 
 - **Real-time Streaming**: Live streaming responses from the LLM
